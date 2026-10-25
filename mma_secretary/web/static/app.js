@@ -42,17 +42,23 @@ function statusClass(s) {
   return "";
 }
 
+function setSaveState(state) {
+  const el = $("#save-dot");
+  if (!el) return;
+  el.className = "save-ind " + state;
+  const label = $(".save-label", el);
+  if (label) label.textContent = state === "busy" ? "сохранение…" : "сохранено";
+}
+
 async function api(path, opts={}) {
-  $("#save-dot").textContent = "сохранение…";
-  $("#save-dot").className = "busy";
+  setSaveState("busy");
   const res = await fetch(path, {
     headers: { "Content-Type": "application/json", ...(opts.headers||{}) },
     ...opts,
     body: opts.body && typeof opts.body !== "string" && !(opts.body instanceof FormData)
       ? JSON.stringify(opts.body) : opts.body,
   });
-  $("#save-dot").textContent = "сохранено";
-  $("#save-dot").className = "saved";
+  setSaveState("saved");
   if (!res.ok) {
     let msg = res.statusText;
     try { const j = await res.json(); msg = j.detail || msg; } catch {}

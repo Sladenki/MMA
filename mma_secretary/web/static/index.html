@@ -6,7 +6,7 @@
   <title>Секретарь ММА</title>
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="/static/icon.png">
-  <link rel="stylesheet" href="/static/app.css?v=25">
+  <link rel="stylesheet" href="/static/app.css?v=27">
 </head>
 <body>
   <aside class="rail">
@@ -41,7 +41,16 @@
         <h1 id="page-title">Турниры</h1>
         <p id="page-hint">Сохраните текущий, начните с нуля или откройте другую копию</p>
       </div>
-      <span id="save-dot" class="saved">сохранено</span>
+      <span id="save-dot" class="save-ind saved" role="status">
+        <svg class="save-disk" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 3.5h13.2L20 6.3V20.5H4V3.5z"/>
+          <path d="M7 3.5h8v5.2H7z"/>
+          <path d="M7 14.2h10v6.3H7z"/>
+          <circle cx="15.2" cy="16.6" r="5.2" class="save-badge"/>
+          <path class="save-check" d="M12.8 16.6l1.4 1.4 3-3"/>
+        </svg>
+        <span class="save-label">сохранено</span>
+      </span>
     </header>
     <section id="view"></section>
   </div>
@@ -56,6 +65,6 @@
     </div>
   </div>
 
-  <script src="/static/app.js?v=29"></script>
+  <script src="/static/app.js?v=31"></script>
 </body>
 </html>

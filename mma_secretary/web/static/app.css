@@ -119,8 +119,37 @@ a.about-link:hover { color: #fff; }
 .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 18px; }
 h1 { margin: 0; font-size: 28px; color: var(--navy); }
 #page-hint { margin: 6px 0 0; color: var(--muted); max-width: 52rem; }
-.saved { color: var(--green); font-size: 14px; padding-top: 8px; }
-.busy { color: var(--amber); }
+.save-ind {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--green-bg);
+  border: 1px solid #9ad0ad;
+  color: var(--green);
+  font-size: 14px;
+  font-weight: 700;
+}
+.save-ind .save-disk {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.save-ind .save-badge { fill: var(--green); stroke: none; }
+.save-ind .save-check { stroke: #fff; stroke-width: 2; fill: none; }
+.save-ind.busy {
+  background: #fff6e5;
+  border-color: #e2c48a;
+  color: var(--amber);
+}
+.save-ind.busy .save-badge { fill: var(--amber); }
 
 .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
 .toolbar input, .toolbar select, .toolbar .dd { width: auto; min-width: 160px; max-width: 280px; flex: 1 1 180px; }
