@@ -146,7 +146,9 @@ h1 { margin: 0; font-size: 28px; color: var(--navy); }
   stroke: currentColor; fill: none; stroke-width: 2;
   stroke-linecap: round; stroke-linejoin: round;
 }
-.actions { display: flex; gap: 6px; align-items: center; }
+/* Не ставить display:flex на td — ломает линии строк таблицы */
+td.actions { white-space: nowrap; vertical-align: middle; }
+td.actions .btn + .btn { margin-left: 6px; }
 
 .card {
   background: var(--panel);
@@ -263,7 +265,6 @@ input:focus, select:focus { outline: 3px solid #c5dbf5; border-color: var(--blue
 
 table.data { width: 100%; border-collapse: collapse; }
 table.data th, table.data td { padding: 11px 12px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: middle; }
-table.data td.actions { white-space: nowrap; }
 table.data th { font-size: 13px; color: var(--muted); font-weight: 600; background: #f7f9fb; }
 table.data tbody tr:hover td { background: #f4f8fc; }
 .table-wrap { overflow: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
