@@ -204,7 +204,13 @@ document.addEventListener("keydown", (e) => {
   if ($(".dd.open")) { closeAllDd(); return; }
   if (!$("#modal").classList.contains("hidden")) closeModal();
 });
-window.addEventListener("scroll", () => closeAllDd(), true);
+window.addEventListener("scroll", (e) => {
+  const open = $(".dd.open");
+  if (!open) return;
+  // Скролл внутри списка опций не закрывает меню
+  if (e.target instanceof Element && open.contains(e.target)) return;
+  closeAllDd();
+}, true);
 window.addEventListener("resize", () => closeAllDd());
 
 function openModal(title, html, extraClass = "") {
