@@ -91,15 +91,24 @@ h2 { font-size: 15px; text-align: center; margin: 16px 0 8px; }
 table { border-collapse: collapse; width: 100%; font-size: 11px; }
 th, td { border: 1px solid #222; padding: 3px 5px; }
 th { background: #eee; }
-.sig { margin-top: 28px; display: flex; flex-direction: column; align-items: flex-start; gap: 14px; font-size: 12px; }
+.sig { margin-top: 28px; display: flex; flex-direction: column; align-items: flex-start; gap: 10px; font-size: 12px; }
+.bracket-foot .sig { margin-top: 0; }
 .sig-row { display: flex; align-items: flex-end; gap: 10px; }
 .sig-role, .sig-name { white-space: nowrap; }
 .sig-line { display: inline-block; width: 110px; border-bottom: 1px solid #111; height: 14px; }
 .page-break { page-break-before: always; }
+@media screen {
+  .page-break { margin-top: 40px; padding-top: 28px; }
+}
 .blue { color: #123a8a; }
 .red { color: #9b1c1c; }
 .cert { text-align: center; padding: 40px 20px; border: 8px double #7a1d1d; min-height: 70vh; }
 .cert h1 { letter-spacing: .3em; font-size: 28px; color: #7a1d1d; }
+.bracket-foot { margin-top: 20px; margin-bottom: 12px; display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; }
+.prize-block { flex: 0 0 140px; font-size: 11px; }
+.prize-block h3 { font-size: 12px; margin: 0 0 6px; text-align: left; font-weight: 700; }
+.prize-row { margin-bottom: 8px; }
+.prize-line { display: block; border-bottom: 1px solid #111; height: 12px; width: 100%; }
 """
 
 
@@ -303,6 +312,12 @@ def scorecards(svc: TournamentService) -> str:
     return wrap("Судейские записки", "".join(cards) or "<p>Нет боёв</p>")
 
 
+def _prize_blanks() -> str:
+    """Пустые строки для рукописного ввода призёров: 1, 2 и два 3-х места."""
+    rows = "".join('<div class="prize-row"><span class="prize-line"></span></div>' for _ in range(4))
+    return f'<aside class="prize-block"><h3>Призёры</h3>{rows}</aside>'
+
+
 def brackets_html(svc: TournamentService) -> str:
     t = svc.get_tournament()
     parts = []
@@ -315,7 +330,8 @@ def brackets_html(svc: TournamentService) -> str:
             f"<section class='page-break'>{_header(t)}"
             f"<h2>{escape(cat['age_label'])} · {escape(cat.get('gender_label') or '')} · "
             f"{escape(cat['division_code'])} · до {escape(cat['weight_label'])} кг ({cat['n']})</h2>"
-            f"{svg}{_sigs(t)}</section>"
+            f"{svg}"
+            f"<div class='bracket-foot'>{_sigs(t)}{_prize_blanks()}</div></section>"
         )
     if parts:
         parts[0] = parts[0].replace(" page-break", "", 1)
