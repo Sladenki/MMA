@@ -315,7 +315,7 @@ def brackets_html(svc: TournamentService) -> str:
             f"<section class='page-break'>{_header(t)}"
             f"<h2>{escape(cat['age_label'])} · {escape(cat.get('gender_label') or '')} · "
             f"{escape(cat['division_code'])} · до {escape(cat['weight_label'])} кг ({cat['n']})</h2>"
-            f"{_sigs(t)}{svg}{_sigs(t)}</section>"
+            f"{svg}{_sigs(t)}</section>"
         )
     if parts:
         parts[0] = parts[0].replace(" page-break", "", 1)
