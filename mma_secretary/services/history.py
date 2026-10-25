@@ -240,6 +240,11 @@ class HistoryMixin:
         for r in data.get("participants", []):
             raw_div = r.get("division_id")
             mapped_div = id_map_div.get(raw_div) if raw_div not in (None, "") else None
+            # Старый JSON: одно поле weight = заявленный. Новый: weight факт, declared_weight заявка.
+            if "declared_weight" in r:
+                actual, declared = r.get("weight"), r.get("declared_weight")
+            else:
+                actual, declared = None, r.get("weight")
             cur = self.conn.execute(
                 """INSERT INTO participant (tournament_id, seq, name, organization, rank, birth_year, coach, weight, declared_weight, status, draw_number, gender, division_id)
                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
@@ -251,8 +256,8 @@ class HistoryMixin:
                     r.get("rank") or "",
                     r.get("birth_year"),
                     r.get("coach") or "",
-                    r.get("weight"),
-                    r.get("declared_weight"),
+                    actual,
+                    declared,
                     r.get("status") or "заявлен",
                     r.get("draw_number"),
                     r.get("gender") or "муж",

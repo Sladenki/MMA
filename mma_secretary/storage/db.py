@@ -182,6 +182,7 @@ class Database:
         self._add_column("participant", "division_id", "INTEGER")
         self._add_column("participant", "declared_weight", "REAL")
         self._add_column("category", "gender", "TEXT NOT NULL DEFAULT 'муж'")
+        self._migrate_legacy_weight_to_declared()
         sql = self.conn.execute(
             "SELECT sql FROM sqlite_master WHERE type='table' AND name='category'"
         ).fetchone()
@@ -211,6 +212,34 @@ class Database:
                 PRAGMA foreign_keys=ON;
                 """
             )
+
+    def _migrate_legacy_weight_to_declared(self) -> None:
+        """Старый единственный weight в JSON/БД — это заявленный, не фактический."""
+        self.conn.execute(
+            "CREATE TABLE IF NOT EXISTS app_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)"
+        )
+        done = self.conn.execute(
+            "SELECT 1 FROM app_meta WHERE key='legacy_weight_to_declared'"
+        ).fetchone()
+        if done:
+            return
+        rows = self.conn.execute(
+            "SELECT id FROM participant WHERE declared_weight IS NULL AND weight IS NOT NULL"
+        ).fetchall()
+        ids = [r[0] for r in rows]
+        if ids:
+            self.conn.execute(
+                """UPDATE participant
+                   SET declared_weight = weight, weight = NULL
+                   WHERE declared_weight IS NULL AND weight IS NOT NULL"""
+            )
+            self.conn.executemany(
+                "DELETE FROM weight_history WHERE participant_id=?",
+                [(i,) for i in ids],
+            )
+        self.conn.execute(
+            "INSERT INTO app_meta (key, value) VALUES ('legacy_weight_to_declared', '1')"
+        )
 
     def close(self) -> None:
         self.conn.close()

@@ -71,6 +71,20 @@ function toast(msg, kind="ok") {
   setTimeout(() => n.remove(), 2800);
 }
 
+function formatWhen(iso) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return String(iso || "");
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function formatKg(v) {
+  if (v == null || v === "") return "—";
+  const n = Number(v);
+  if (Number.isNaN(n)) return String(v);
+  return String(n).replace(".", ",");
+}
+
 function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
 }
@@ -420,7 +434,7 @@ const views = {
       </div>
       <div class="table-wrap">
         <table class="data" id="ptable">
-          <thead><tr><th>№</th><th>Жребий</th><th>ФИО</th><th>Пол</th><th>Организация</th><th>Разряд</th><th>Год</th><th>Тренер</th><th>Факт.</th><th>Заявл.</th><th>Статус</th><th></th></tr></thead>
+          <thead><tr><th>№</th><th>Жребий</th><th>ФИО</th><th>Пол</th><th>Организация</th><th>Разряд</th><th>Год</th><th>Тренер</th><th>Заявл.</th><th>Факт.</th><th>Статус</th><th></th></tr></thead>
           <tbody></tbody>
         </table>
       </div>`;
@@ -432,7 +446,7 @@ const views = {
         <td>${p.seq??""}</td><td><input data-draw="${p.id}" value="${p.draw_number??""}" inputmode="numeric" style="width:72px;text-align:center"></td>
         <td><b>${esc(p.name)}</b></td><td>${p.gender==="жен"?"жен":"муж"}</td><td>${esc(p.organization)}</td>
         <td>${esc(p.rank)}</td><td>${p.birth_year??""}</td><td>${esc(p.coach)}</td>
-        <td>${p.weight ?? "—"}</td><td>${p.declared_weight ?? "—"}</td>
+        <td>${p.declared_weight ?? "—"}</td><td>${p.weight ?? "—"}</td>
         <td><span class="badge ${statusClass(p.status)}">${esc(p.status)}</span></td>
         <td class="actions">
           <button class="btn sm sec" data-edit="${p.id}" type="button"><svg viewBox="0 0 24 24"><path d="M4 20h4l10-10-4-4L4 16v4z"/><path d="M13 7l4 4"/></svg> Изменить</button>
@@ -479,11 +493,11 @@ const views = {
       </div>
       <div class="table-wrap">
         <table class="data">
-          <thead><tr><th>ФИО</th><th>Организация</th><th>Год</th><th>Фактический, кг</th><th>Заявленный, кг</th><th>Статус</th><th></th></tr></thead>
+          <thead><tr><th>ФИО</th><th>Организация</th><th>Год</th><th>Заявленный, кг</th><th>Фактический, кг</th><th>Статус</th><th></th></tr></thead>
           <tbody>${list.map(p => `<tr>
             <td><b>${esc(p.name)}</b></td><td>${esc(p.organization)}</td><td>${p.birth_year??""}</td>
-            <td><input data-w="${p.id}" value="${p.weight ?? ""}" inputmode="decimal" style="width:110px"></td>
             <td><input data-dw="${p.id}" value="${p.declared_weight ?? ""}" inputmode="decimal" style="width:110px"></td>
+            <td><input data-w="${p.id}" value="${p.weight ?? ""}" inputmode="decimal" style="width:110px"></td>
             <td><select data-st="${p.id}">
               ${["заявлен","взвешен","допущен","снят","не явился"].map(s => `<option ${s===p.status?"selected":""}>${s}</option>`).join("")}
             </select></td>
@@ -508,8 +522,17 @@ const views = {
         catch (err) { toast(err.message, "err"); }
       }
       if (e.target.dataset.hist) {
+        const person = list.find(p => String(p.id) === String(id));
         const h = await api(`/api/participants/${id}/weights`);
-        openModal("История веса", h.length ? `<ul>${h.map(x=>`<li>${esc(x.recorded_at)} — ${x.weight} кг</li>`).join("")}</ul>` : "<p>записей нет</p>");
+        const declared = person?.declared_weight != null
+          ? `<p class="hist-note">Заявленный вес: <b>${formatKg(person.declared_weight)} кг</b></p>`
+          : `<p class="hist-note">Заявленный вес не указан</p>`;
+        openModal(
+          "История фактического веса",
+          declared + (h.length
+            ? `<ul class="hist-list">${h.map(x => `<li><span class="hist-when">${esc(formatWhen(x.recorded_at))}</span><span class="hist-kg">факт. ${formatKg(x.weight)} кг</span></li>`).join("")}</ul>`
+            : "<p>Записей фактического веса ещё нет</p>")
+        );
       }
     };
   },
@@ -820,11 +843,11 @@ function personForm(p) {
     <div class="form-sec">
       <h4>На турнире</h4>
       <div class="grid two">
-        <label class="field">Фактический вес, кг
-          <input id="f-w" value="${esc(v("weight"))}" inputmode="decimal" placeholder="после взвешивания">
-        </label>
         <label class="field">Заявленный вес, кг
           <input id="f-dw" value="${esc(v("declared_weight"))}" inputmode="decimal" placeholder="65,8">
+        </label>
+        <label class="field">Фактический вес, кг
+          <input id="f-w" value="${esc(v("weight"))}" inputmode="decimal" placeholder="после взвешивания">
         </label>
       </div>
       <label class="field">Жребий

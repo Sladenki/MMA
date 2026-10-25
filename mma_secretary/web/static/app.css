@@ -150,6 +150,16 @@ h1 { margin: 0; font-size: 28px; color: var(--navy); }
 td.actions { white-space: nowrap; vertical-align: middle; }
 td.actions .btn + .btn { margin-left: 6px; }
 
+.hist-note { margin: 0 0 12px; color: var(--muted); font-size: 14px; }
+.hist-list { list-style: none; margin: 0; padding: 0; }
+.hist-list li {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+  padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 15px;
+}
+.hist-list li:last-child { border-bottom: 0; }
+.hist-when { color: var(--muted); }
+.hist-kg { font-weight: 700; color: var(--navy); white-space: nowrap; }
+
 .card {
   background: var(--panel);
   border: 1px solid var(--line);

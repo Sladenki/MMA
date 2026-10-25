@@ -86,7 +86,6 @@ def demo():
                 "rank": p["rank"],
                 "birth_year": p["year"],
                 "coach": p["coach"],
-                "weight": p["weight"],
                 "declared_weight": p["weight"],
             }
         )

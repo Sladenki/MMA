@@ -17,8 +17,8 @@ HEADERS = [
     "Разряд",
     "Год",
     "Тренер",
-    "Фактический вес",
     "Заявленный вес",
+    "Фактический вес",
 ]
 
 
@@ -113,8 +113,8 @@ def export_participants_xlsx(svc: TournamentService) -> bytes:
                 p["rank"],
                 p["birth_year"],
                 p["coach"],
-                p["weight"],
                 p.get("declared_weight"),
+                p["weight"],
             ]
         )
     buf = BytesIO()
