@@ -303,7 +303,6 @@ async function renderArchives() {
   try { saves = await api("/api/saves"); } catch { apiOk = false; }
   $("#view").innerHTML = `
     <div class="card">
-      <p style="margin:0 0 8px">Сейчас открыто: <b>${esc(t.name || "без названия")}</b>${t.date ? " · " + esc(t.date) : ""}</p>
       ${state.boot.keeps_documents ? `<p class="hint-inline">Турнир хранится в Документах, в папке «Секретарь ММА». Если удалить программу из Загрузок, данные останутся.</p>` : ""}
       ${apiOk ? "" : `<div class="warn-box">Сервер старый и не умеет копии. Закройте чёрное окно, запустите start.bat заново, затем обновите страницу.</div>`}
       <div class="add-row" style="margin-bottom:12px">
@@ -312,12 +311,17 @@ async function renderArchives() {
         <button class="btn sec" id="new-now" type="button">Начать с нуля</button>
       </div>
       ${saves.length ? `<table class="data"><thead><tr><th>Название</th><th>Когда сохранили</th><th>Участников</th><th></th></tr></thead>
-      <tbody>${saves.map(s => `<tr>
-        <td><b>${esc(s.name)}</b></td>
-        <td>${esc((s.saved_at || "").replace("T", " ").replace("+00:00",""))}</td>
-        <td>${s.participants}</td>
+      <tbody>${saves.map(s => `<tr class="${s.active ? "is-current" : ""}">
         <td>
-            <button class="btn sm" data-load="${esc(s.id)}" type="button">Открыть</button>
+          <b>${esc(s.name)}</b>
+          ${s.active ? `<span class="badge ok">открыт</span>` : ""}
+        </td>
+        <td>${esc(formatWhen(s.saved_at) || "—")}</td>
+        <td>${s.participants}</td>
+        <td class="actions">
+            ${s.active
+              ? `<span class="archive-open-mark">Сейчас открыт</span>`
+              : `<button class="btn sm" data-load="${esc(s.id)}" type="button">Открыть</button>`}
             <button class="btn sm danger" data-forget="${esc(s.id)}" type="button">Удалить</button>
         </td>
       </tr>`).join("")}</tbody></table>` : `<p style="color:#5c6570;margin:0">Сохранённых копий пока нет. Нажмите «Сохранить этот турнир», чтобы оставить учебный список с Excel.</p>`}
@@ -327,6 +331,7 @@ async function renderArchives() {
     try {
       const r = await api("/api/saves", { method: "POST", body: { name: $("#save-name").value } });
       toast("Сохранено: " + r.name);
+      await boot();
       show("archives");
     } catch (e) { toast(e.message, "err"); }
   };

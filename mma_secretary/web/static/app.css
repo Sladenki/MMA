@@ -179,6 +179,13 @@ h1 { margin: 0; font-size: 28px; color: var(--navy); }
 td.actions { white-space: nowrap; vertical-align: middle; }
 td.actions .btn + .btn { margin-left: 6px; }
 
+.archive-open-mark {
+  display: inline-block; font-size: 13px; font-weight: 700;
+  color: var(--green); margin-right: 8px; vertical-align: middle;
+}
+table.data tr.is-current td { background: #eef8f1; }
+table.data tr.is-current td .badge { margin-left: 8px; vertical-align: middle; }
+
 .hist-note { margin: 0 0 12px; color: var(--muted); font-size: 14px; }
 .hist-list { list-style: none; margin: 0; padding: 0; }
 .hist-list li {

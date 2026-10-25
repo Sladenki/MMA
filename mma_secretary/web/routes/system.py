@@ -34,6 +34,7 @@ def export_json():
 async def import_json(file: UploadFile = File(...)):
     data = json.loads(await file.read())
     svc.import_bundle(data)
+    archives.set_current_id(None)
     return {"ok": True}
 
 
@@ -65,6 +66,7 @@ def delete_save(sid: str):
 @router.post("/api/tournament/new")
 def new_tournament():
     svc.reset_to_empty()
+    archives.set_current_id(None)
     return {"ok": True}
 
 

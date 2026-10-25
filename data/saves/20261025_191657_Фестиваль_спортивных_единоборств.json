@@ -187,9 +187,12 @@
       "rank": "",
       "birth_year": 2007,
       "coach": "Хромов",
-      "weight": 52.0,
+      "weight": null,
       "status": "взвешен",
-      "draw_number": 98
+      "draw_number": 98,
+      "gender": "муж",
+      "division_id": null,
+      "declared_weight": 52.0
     },
     {
       "id": 2,
@@ -200,9 +203,12 @@
       "rank": "",
       "birth_year": 2008,
       "coach": "Банный",
-      "weight": 61.0,
+      "weight": null,
       "status": "взвешен",
-      "draw_number": 140
+      "draw_number": 140,
+      "gender": "муж",
+      "division_id": null,
+      "declared_weight": 61.0
     },
     {
       "id": 3,
@@ -213,9 +219,12 @@
       "rank": "",
       "birth_year": 2008,
       "coach": "Алиев",
-      "weight": 61.0,
+      "weight": null,
       "status": "взвешен",
-      "draw_number": 52
+      "draw_number": 52,
+      "gender": "муж",
+      "division_id": null,
+      "declared_weight": 61.0
     },
     {
       "id": 4,
@@ -226,9 +235,12 @@
       "rank": "",
       "birth_year": 2008,
       "coach": "Сардор",
-      "weight": 65.0,
+      "weight": null,
       "status": "взвешен",
-      "draw_number": 71
+      "draw_number": 71,
+      "gender": "муж",
+      "division_id": null,
+      "declared_weight": 65.0
     },
     {
       "id": 5,
@@ -239,9 +251,12 @@
       "rank": "",
       "birth_year": 2008,
       "coach": "Хромов",
-      "weight": 65.0,
+      "weight": null,
       "status": "взвешен",
-      "draw_number": 242
+      "draw_number": 242,
+      "gender": "муж",
+      "division_id": null,
+      "declared_weight": 65.0
     },
     {
       "id": 6,
@@ -252,9 +267,12 @@
       "rank": "",
       "birth_year": 2007,
       "coach": "Алиев",
-      "weight": 65.0,
+      "weight": null,
       "status": "взвешен",
-      "draw_number": 21
+      "draw_number": 21,
+      "gender": "муж",
+      "division_id": null,
+      "declared_weight": 65.0
     },
     {
       "id": 7,
@@ -265,9 +283,12 @@
       "rank": "",
       "birth_year": 2007,
       "coach": "Белоусов",
-      "weight": 70.0,
+      "weight": null,
       "status": "взвешен",
-      "draw_number": 107
+      "draw_number": 107,
+      "gender": "муж",
+      "division_id": null,
+      "declared_weight": 70.0
     },
     {
       "id": 8,
@@ -278,9 +299,12 @@
       "rank": "",
       "birth_year": 2008,
       "coach": "Тюпа",
-      "weight": 70.0,
+      "weight": null,
       "status": "взвешен",
-      "draw_number": 389
+      "draw_number": 389,
+      "gender": "муж",
+      "division_id": null,
+      "declared_weight": 70.0
     },
     {
       "id": 9,
@@ -291,9 +315,12 @@
       "rank": "",
       "birth_year": 2007,
       "coach": "Банный",
-      "weight": 70.0,
+      "weight": null,
       "status": "взвешен",
-      "draw_number": 348
+      "draw_number": 348,
+      "gender": "муж",
+      "division_id": null,
+      "declared_weight": 70.0
     },
     {
       "id": 10,
@@ -304,9 +331,12 @@
       "rank": "",
       "birth_year": 2008,
       "coach": "Черных",
-      "weight": 70.0,
+      "weight": null,
       "status": "взвешен",
-      "draw_number": 3
+      "draw_number": 3,
+      "gender": "муж",
+      "division_id": null,
+      "declared_weight": 70.0
     },
     {
       "id": 11,
@@ -317,9 +347,12 @@
       "rank": "",
       "birth_year": 2007,
       "coach": "Хромов",
-      "weight": 77.0,
+      "weight": null,
       "status": "взвешен",
-      "draw_number": 132
+      "draw_number": 132,
+      "gender": "муж",
+      "division_id": null,
+      "declared_weight": 77.0
     },
     {
       "id": 12,
@@ -330,9 +363,12 @@
       "rank": "",
       "birth_year": 2007,
       "coach": "Черных",
-      "weight": 77.0,
+      "weight": null,
       "status": "взвешен",
-      "draw_number": 48
+      "draw_number": 48,
+      "gender": "муж",
+      "division_id": null,
+      "declared_weight": 77.0
     },
     {
       "id": 13,
@@ -343,9 +379,12 @@
       "rank": "",
       "birth_year": 2008,
       "coach": "Черных",
-      "weight": 83.0,
-      "status": "взвешен",
-      "draw_number": 61
+      "weight": 65.0,
+      "status": "снят",
+      "draw_number": 61,
+      "gender": "муж",
+      "division_id": null,
+      "declared_weight": 67.0
     },
     {
       "id": 14,
@@ -356,95 +395,32 @@
       "rank": "",
       "birth_year": 2007,
       "coach": "Черных",
-      "weight": 120.0,
+      "weight": null,
       "status": "взвешен",
-      "draw_number": 53
+      "draw_number": 53,
+      "gender": "муж",
+      "division_id": null,
+      "declared_weight": 120.0
     }
   ],
   "weight_history": [
     {
       "id": 1,
-      "participant_id": 1,
-      "weight": 52.0,
-      "recorded_at": "2026-09-21T20:50:10+00:00"
+      "participant_id": 13,
+      "weight": 65.0,
+      "recorded_at": "2026-10-25T19:08:26+00:00"
     },
     {
       "id": 2,
-      "participant_id": 2,
-      "weight": 61.0,
-      "recorded_at": "2026-09-21T20:50:10+00:00"
+      "participant_id": 13,
+      "weight": 65.0,
+      "recorded_at": "2026-10-25T19:08:32+00:00"
     },
     {
       "id": 3,
-      "participant_id": 3,
-      "weight": 61.0,
-      "recorded_at": "2026-09-21T20:50:10+00:00"
-    },
-    {
-      "id": 4,
-      "participant_id": 4,
-      "weight": 65.0,
-      "recorded_at": "2026-09-21T20:50:10+00:00"
-    },
-    {
-      "id": 5,
-      "participant_id": 5,
-      "weight": 65.0,
-      "recorded_at": "2026-09-21T20:50:10+00:00"
-    },
-    {
-      "id": 6,
-      "participant_id": 6,
-      "weight": 65.0,
-      "recorded_at": "2026-09-21T20:50:10+00:00"
-    },
-    {
-      "id": 7,
-      "participant_id": 7,
-      "weight": 70.0,
-      "recorded_at": "2026-09-21T20:50:10+00:00"
-    },
-    {
-      "id": 8,
-      "participant_id": 8,
-      "weight": 70.0,
-      "recorded_at": "2026-09-21T20:50:10+00:00"
-    },
-    {
-      "id": 9,
-      "participant_id": 9,
-      "weight": 70.0,
-      "recorded_at": "2026-09-21T20:50:10+00:00"
-    },
-    {
-      "id": 10,
-      "participant_id": 10,
-      "weight": 70.0,
-      "recorded_at": "2026-09-21T20:50:10+00:00"
-    },
-    {
-      "id": 11,
-      "participant_id": 11,
-      "weight": 77.0,
-      "recorded_at": "2026-09-21T20:50:10+00:00"
-    },
-    {
-      "id": 12,
-      "participant_id": 12,
-      "weight": 77.0,
-      "recorded_at": "2026-09-21T20:50:10+00:00"
-    },
-    {
-      "id": 13,
       "participant_id": 13,
-      "weight": 83.0,
-      "recorded_at": "2026-09-21T20:50:10+00:00"
-    },
-    {
-      "id": 14,
-      "participant_id": 14,
-      "weight": 120.0,
-      "recorded_at": "2026-09-21T20:50:10+00:00"
+      "weight": 65.0,
+      "recorded_at": "2026-10-25T19:10:55+00:00"
     }
   ],
   "brackets": {
@@ -455,6 +431,7 @@
         "age_group_id": 1,
         "division_id": 1,
         "weight_class_id": 1,
+        "gender": "муж",
         "bracket_kind": "walkover",
         "drawn_at": "2026-09-21T20:55:59+00:00"
       },
@@ -464,6 +441,7 @@
         "age_group_id": 1,
         "division_id": 1,
         "weight_class_id": 3,
+        "gender": "муж",
         "bracket_kind": "final",
         "drawn_at": "2026-09-21T20:55:59+00:00"
       },
@@ -473,6 +451,7 @@
         "age_group_id": 1,
         "division_id": 1,
         "weight_class_id": 4,
+        "gender": "муж",
         "bracket_kind": "round_robin",
         "drawn_at": "2026-09-21T20:55:59+00:00"
       },
@@ -482,6 +461,7 @@
         "age_group_id": 1,
         "division_id": 1,
         "weight_class_id": 5,
+        "gender": "муж",
         "bracket_kind": "single_elim",
         "drawn_at": "2026-09-22T11:39:07+00:00"
       },
@@ -491,6 +471,7 @@
         "age_group_id": 1,
         "division_id": 1,
         "weight_class_id": 6,
+        "gender": "муж",
         "bracket_kind": "final",
         "drawn_at": "2026-09-21T20:55:59+00:00"
       },
@@ -500,6 +481,7 @@
         "age_group_id": 1,
         "division_id": 1,
         "weight_class_id": 7,
+        "gender": "муж",
         "bracket_kind": "walkover",
         "drawn_at": "2026-09-21T20:55:59+00:00"
       },
@@ -509,6 +491,7 @@
         "age_group_id": 1,
         "division_id": 1,
         "weight_class_id": 9,
+        "gender": "муж",
         "bracket_kind": "walkover",
         "drawn_at": "2026-09-21T20:55:59+00:00"
       }
@@ -691,7 +674,7 @@
         "source_red": null
       },
       {
-        "id": 13,
+        "id": 6,
         "tournament_id": 1,
         "category_id": 5,
         "match_key": "F",
@@ -709,7 +692,7 @@
         "source_red": null
       },
       {
-        "id": 14,
+        "id": 7,
         "tournament_id": 1,
         "category_id": 6,
         "match_key": "auto-1",
@@ -727,7 +710,7 @@
         "source_red": null
       },
       {
-        "id": 15,
+        "id": 8,
         "tournament_id": 1,
         "category_id": 7,
         "match_key": "auto-1",
@@ -745,82 +728,10 @@
         "source_red": null
       },
       {
-        "id": 16,
+        "id": 9,
         "tournament_id": 1,
         "category_id": 4,
         "match_key": "R1-0",
-        "bout_no": null,
-        "round_code": "1/4",
-        "slot": 0,
-        "blue_entry_id": 15,
-        "red_entry_id": null,
-        "winner_entry_id": 15,
-        "method": null,
-        "ring": null,
-        "scheduled_order": null,
-        "is_bye": 1,
-        "source_blue": null,
-        "source_red": null
-      },
-      {
-        "id": 17,
-        "tournament_id": 1,
-        "category_id": 4,
-        "match_key": "R1-1",
-        "bout_no": null,
-        "round_code": "1/4",
-        "slot": 1,
-        "blue_entry_id": 16,
-        "red_entry_id": null,
-        "winner_entry_id": 16,
-        "method": null,
-        "ring": null,
-        "scheduled_order": null,
-        "is_bye": 1,
-        "source_blue": null,
-        "source_red": null
-      },
-      {
-        "id": 18,
-        "tournament_id": 1,
-        "category_id": 4,
-        "match_key": "R1-2",
-        "bout_no": null,
-        "round_code": "1/4",
-        "slot": 2,
-        "blue_entry_id": 17,
-        "red_entry_id": null,
-        "winner_entry_id": 17,
-        "method": null,
-        "ring": null,
-        "scheduled_order": null,
-        "is_bye": 1,
-        "source_blue": null,
-        "source_red": null
-      },
-      {
-        "id": 19,
-        "tournament_id": 1,
-        "category_id": 4,
-        "match_key": "R1-3",
-        "bout_no": null,
-        "round_code": "1/4",
-        "slot": 3,
-        "blue_entry_id": 18,
-        "red_entry_id": null,
-        "winner_entry_id": 18,
-        "method": null,
-        "ring": null,
-        "scheduled_order": null,
-        "is_bye": 1,
-        "source_blue": null,
-        "source_red": null
-      },
-      {
-        "id": 20,
-        "tournament_id": 1,
-        "category_id": 4,
-        "match_key": "R2-0",
         "bout_no": 5,
         "round_code": "1/2",
         "slot": 0,
@@ -831,14 +742,14 @@
         "ring": null,
         "scheduled_order": 5,
         "is_bye": 0,
-        "source_blue": "R1-0",
-        "source_red": "R1-1"
+        "source_blue": null,
+        "source_red": null
       },
       {
-        "id": 21,
+        "id": 10,
         "tournament_id": 1,
         "category_id": 4,
-        "match_key": "R2-1",
+        "match_key": "R1-1",
         "bout_no": 6,
         "round_code": "1/2",
         "slot": 1,
@@ -849,14 +760,14 @@
         "ring": null,
         "scheduled_order": 6,
         "is_bye": 0,
-        "source_blue": "R1-2",
-        "source_red": "R1-3"
+        "source_blue": null,
+        "source_red": null
       },
       {
-        "id": 22,
+        "id": 11,
         "tournament_id": 1,
         "category_id": 4,
-        "match_key": "R3-0",
+        "match_key": "R2-0",
         "bout_no": 7,
         "round_code": "финал",
         "slot": 0,
@@ -867,8 +778,8 @@
         "ring": null,
         "scheduled_order": 7,
         "is_bye": 0,
-        "source_blue": "R2-0",
-        "source_red": "R2-1"
+        "source_blue": "R1-0",
+        "source_red": "R1-1"
       }
     ],
     "placements": [
@@ -903,14 +814,14 @@
     {
       "id": 1,
       "category_id": 4,
-      "method": "redraw",
-      "seed": 3483932034,
-      "created_at": "2026-09-22T11:39:07+00:00",
-      "payload": "{\"pairs\": [[8, 1], [9, 2], [10, 3], [7, 4]]}"
+      "method": "manual",
+      "seed": null,
+      "created_at": "2026-10-25T17:27:10+00:00",
+      "payload": "{\"ids\": [8, 9, 10, 7]}"
     }
   ],
   "_meta": {
     "title": "Фестиваль спортивных единоборств",
-    "saved_at": "2026-09-23T13:28:53+00:00"
+    "saved_at": "2026-10-25T19:16:57+00:00"
   }
 }
