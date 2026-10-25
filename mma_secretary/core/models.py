@@ -43,6 +43,7 @@ class Participant:
     draw_number: int | None = None
     gender: str = "муж"
     division_id: int | None = None
+    declared_weight: float | None = None
 
 
 @dataclass(frozen=True)

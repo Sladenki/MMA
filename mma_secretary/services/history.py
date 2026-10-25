@@ -54,14 +54,27 @@ class HistoryMixin:
             b = payload["before"]
             self.conn.execute(
                 """UPDATE participant SET name=?, organization=?, rank=?, birth_year=?, coach=?,
-                   weight=?, status=?, draw_number=?, gender=?, division_id=? WHERE id=?""",
-                (b["name"], b["organization"], b["rank"], b["birth_year"], b["coach"], b["weight"], b["status"], b["draw_number"], b.get("gender") or "муж", b.get("division_id"), b["id"]),
+                   weight=?, declared_weight=?, status=?, draw_number=?, gender=?, division_id=? WHERE id=?""",
+                (
+                    b["name"],
+                    b["organization"],
+                    b["rank"],
+                    b["birth_year"],
+                    b["coach"],
+                    b["weight"],
+                    b.get("declared_weight"),
+                    b["status"],
+                    b["draw_number"],
+                    b.get("gender") or "муж",
+                    b.get("division_id"),
+                    b["id"],
+                ),
             )
         elif action == "weigh_in" and "before" in payload:
             b = payload["before"]
             self.conn.execute(
-                "UPDATE participant SET weight=?, status=? WHERE id=?",
-                (b["weight"], b["status"], b["id"]),
+                "UPDATE participant SET weight=?, declared_weight=?, status=? WHERE id=?",
+                (b["weight"], b.get("declared_weight"), b["status"], b["id"]),
             )
         elif action == "add_participant":
             self.conn.execute("DELETE FROM participant WHERE id=?", (payload["id"],))
@@ -69,9 +82,24 @@ class HistoryMixin:
             b = payload["before"]
             self.conn.execute(
                 """INSERT INTO participant
-                   (id, tournament_id, seq, name, organization, rank, birth_year, coach, weight, status, draw_number, gender, division_id)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
-                (b["id"], b["tournament_id"], b["seq"], b["name"], b["organization"], b["rank"], b["birth_year"], b["coach"], b["weight"], b["status"], b["draw_number"], b.get("gender") or "муж", b.get("division_id")),
+                   (id, tournament_id, seq, name, organization, rank, birth_year, coach, weight, declared_weight, status, draw_number, gender, division_id)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                (
+                    b["id"],
+                    b["tournament_id"],
+                    b["seq"],
+                    b["name"],
+                    b["organization"],
+                    b["rank"],
+                    b["birth_year"],
+                    b["coach"],
+                    b["weight"],
+                    b.get("declared_weight"),
+                    b["status"],
+                    b["draw_number"],
+                    b.get("gender") or "муж",
+                    b.get("division_id"),
+                ),
             )
         else:
             raise ValueError(f"Отмена «{action}» не поддерживается")
@@ -213,9 +241,23 @@ class HistoryMixin:
             raw_div = r.get("division_id")
             mapped_div = id_map_div.get(raw_div) if raw_div not in (None, "") else None
             cur = self.conn.execute(
-                """INSERT INTO participant (tournament_id, seq, name, organization, rank, birth_year, coach, weight, status, draw_number, gender, division_id)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
-                (tid, r.get("seq"), r["name"], r.get("organization") or "", r.get("rank") or "", r.get("birth_year"), r.get("coach") or "", r.get("weight"), r.get("status") or "заявлен", r.get("draw_number"), r.get("gender") or "муж", mapped_div),
+                """INSERT INTO participant (tournament_id, seq, name, organization, rank, birth_year, coach, weight, declared_weight, status, draw_number, gender, division_id)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                (
+                    tid,
+                    r.get("seq"),
+                    r["name"],
+                    r.get("organization") or "",
+                    r.get("rank") or "",
+                    r.get("birth_year"),
+                    r.get("coach") or "",
+                    r.get("weight"),
+                    r.get("declared_weight"),
+                    r.get("status") or "заявлен",
+                    r.get("draw_number"),
+                    r.get("gender") or "муж",
+                    mapped_div,
+                ),
             )
             id_map_p[r["id"]] = cur.lastrowid
         br = data.get("brackets") or {}

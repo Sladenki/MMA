@@ -42,7 +42,13 @@ def del_part(pid: int):
 @router.post("/api/participants/{pid}/weigh")
 def weigh(pid: int, data: dict):
     try:
-        return svc.weigh_in(pid, data.get("weight"), data.get("status"))
+        return svc.weigh_in(
+            pid,
+            data.get("weight"),
+            data.get("status"),
+            declared_weight=data.get("declared_weight"),
+            update_declared="declared_weight" in data,
+        )
     except Exception as e:
         bad_request(e)
 
@@ -81,6 +87,7 @@ def demo():
                 "birth_year": p["year"],
                 "coach": p["coach"],
                 "weight": p["weight"],
+                "declared_weight": p["weight"],
             }
         )
     return {"ok": True, "n": len(svc.list_participants())}

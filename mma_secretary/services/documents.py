@@ -128,14 +128,16 @@ def protocol_weigh_in(svc: TournamentService) -> str:
         f"<td>{escape(p['name'])}</td><td>{escape(p['organization'] or '')}</td>"
         f"<td>{escape(p['rank'] or '')}</td><td>{p['birth_year'] or ''}</td>"
         f"<td>{escape(p['coach'] or '')}</td>"
-        f"<td>{format_kg(p['weight']) if p['weight'] is not None else ''}</td></tr>"
+        f"<td>{format_kg(p['weight']) if p['weight'] is not None else ''}</td>"
+        f"<td>{format_kg(p['declared_weight']) if p.get('declared_weight') is not None else ''}</td></tr>"
         for p in svc.list_participants("team")
     )
     body = _header(t) + f"""
     <h2>Протокол взвешивания и жеребьёвки</h2>
     <table>
       <tr><th>№</th><th>Жребий</th><th>Контр.</th><th>Фамилия, имя</th>
-      <th>Город, организация</th><th>Разряд</th><th>Год</th><th>Тренер</th><th>Вес</th></tr>
+      <th>Город, организация</th><th>Разряд</th><th>Год</th><th>Тренер</th>
+      <th>Факт.</th><th>Заявл.</th></tr>
       {rows}
     </table>
     {_sigs(t)}

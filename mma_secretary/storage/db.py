@@ -65,6 +65,7 @@ CREATE TABLE IF NOT EXISTS participant (
   birth_year INTEGER,
   coach TEXT NOT NULL DEFAULT '',
   weight REAL,
+  declared_weight REAL,
   status TEXT NOT NULL DEFAULT 'заявлен',
   draw_number INTEGER,
   gender TEXT NOT NULL DEFAULT 'муж',
@@ -179,6 +180,7 @@ class Database:
     def migrate(self) -> None:
         self._add_column("participant", "gender", "TEXT NOT NULL DEFAULT 'муж'")
         self._add_column("participant", "division_id", "INTEGER")
+        self._add_column("participant", "declared_weight", "REAL")
         self._add_column("category", "gender", "TEXT NOT NULL DEFAULT 'муж'")
         sql = self.conn.execute(
             "SELECT sql FROM sqlite_master WHERE type='table' AND name='category'"

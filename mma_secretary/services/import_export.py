@@ -8,7 +8,18 @@ from openpyxl import Workbook, load_workbook
 from mma_secretary.core.normalize import normalize_name, normalize_org, normalize_rank, parse_weight
 from mma_secretary.services.engine import TournamentService
 
-HEADERS = ["№", "жребий", "контрольный", "Фамилия, имя", "Город, организация", "Разряд", "Год", "Тренер", "Вес"]
+HEADERS = [
+    "№",
+    "жребий",
+    "контрольный",
+    "Фамилия, имя",
+    "Город, организация",
+    "Разряд",
+    "Год",
+    "Тренер",
+    "Фактический вес",
+    "Заявленный вес",
+]
 
 
 def import_xlsx(svc: TournamentService, data: bytes | Path) -> dict:
@@ -70,7 +81,10 @@ def import_xlsx(svc: TournamentService, data: bytes | Path) -> dict:
             continue
         rec["organization"] = normalize_org(rec["organization"])
         rec["rank"] = normalize_rank(rec["rank"])
-        rec["weight"] = parse_weight(rec["weight"])
+        # В старых Excel одна колонка «Вес» — это заявленный; фактический вводят на взвешивании.
+        w = parse_weight(rec.pop("weight", None))
+        rec["declared_weight"] = w
+        rec["weight"] = None
         try:
             rec["birth_year"] = int(rec["birth_year"]) if rec["birth_year"] not in (None, "") else None
         except (TypeError, ValueError):
@@ -100,6 +114,7 @@ def export_participants_xlsx(svc: TournamentService) -> bytes:
                 p["birth_year"],
                 p["coach"],
                 p["weight"],
+                p.get("declared_weight"),
             ]
         )
     buf = BytesIO()

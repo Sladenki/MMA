@@ -7,7 +7,7 @@ const titles = {
   archives: ["Турниры", "Сохраните текущие данные, начните пустой турнир или откройте другую копию."],
   setup: ["Реквизиты", "Название турнира, судьи, возрасты (например 2018-2019), дивизионы и веса"],
   people: ["Участники", ""],
-  weigh: ["Взвешивание", "Впишите фактический вес и нажмите «Записать». Запятая и точка оба подходят."],
+  weigh: ["Взвешивание", "Слева фактический вес, справа заявленный. Впишите факт и нажмите «Записать». Запятая и точка оба подходят."],
   cats: ["Категории", "Разбейте список по возрасту, дивизиону и весу. Кто не попал — будет в жёлтом списке, а не пропадёт."],
   brackets: ["Сетки", "Выберите категорию и нажмите на пару, чтобы записать победителя. Он сам пойдёт дальше."],
   bouts: ["Бои", "Все пары турнира по порядку. Здесь же можно поставить номер ринга."],
@@ -420,7 +420,7 @@ const views = {
       </div>
       <div class="table-wrap">
         <table class="data" id="ptable">
-          <thead><tr><th>№</th><th>Жребий</th><th>ФИО</th><th>Пол</th><th>Организация</th><th>Разряд</th><th>Год</th><th>Тренер</th><th>Вес</th><th>Статус</th><th></th></tr></thead>
+          <thead><tr><th>№</th><th>Жребий</th><th>ФИО</th><th>Пол</th><th>Организация</th><th>Разряд</th><th>Год</th><th>Тренер</th><th>Факт.</th><th>Заявл.</th><th>Статус</th><th></th></tr></thead>
           <tbody></tbody>
         </table>
       </div>`;
@@ -432,12 +432,13 @@ const views = {
         <td>${p.seq??""}</td><td><input data-draw="${p.id}" value="${p.draw_number??""}" inputmode="numeric" style="width:72px;text-align:center"></td>
         <td><b>${esc(p.name)}</b></td><td>${p.gender==="жен"?"жен":"муж"}</td><td>${esc(p.organization)}</td>
         <td>${esc(p.rank)}</td><td>${p.birth_year??""}</td><td>${esc(p.coach)}</td>
-        <td>${p.weight ?? "—"}</td><td><span class="badge ${statusClass(p.status)}">${esc(p.status)}</span></td>
+        <td>${p.weight ?? "—"}</td><td>${p.declared_weight ?? "—"}</td>
+        <td><span class="badge ${statusClass(p.status)}">${esc(p.status)}</span></td>
         <td class="actions">
           <button class="btn sm sec" data-edit="${p.id}" type="button"><svg viewBox="0 0 24 24"><path d="M4 20h4l10-10-4-4L4 16v4z"/><path d="M13 7l4 4"/></svg> Изменить</button>
           <button class="btn sm danger" data-del="${p.id}" type="button"><svg viewBox="0 0 24 24"><path d="M5 7h14M10 7V5h4v2M8 7l1 12h6l1-12"/></svg> Удалить</button>
         </td>
-      </tr>`).join("") || `<tr><td colspan="11">Список пуст. Добавьте человека или загрузите Excel.</td></tr>`;
+      </tr>`).join("") || `<tr><td colspan="12">Список пуст. Добавьте человека или загрузите Excel.</td></tr>`;
     };
     draw(list);
     $("#q").oninput = () => {
@@ -473,15 +474,16 @@ const views = {
     const left = list.filter(p => p.weight == null).length;
     $("#view").innerHTML = `
       <div class="toolbar">
-        <div class="stat"><b>${left}</b><span>ещё без веса</span></div>
+        <div class="stat"><b>${left}</b><span>ещё без фактического</span></div>
         <div class="stat"><b>${list.length - left}</b><span>уже взвешены</span></div>
       </div>
       <div class="table-wrap">
         <table class="data">
-          <thead><tr><th>ФИО</th><th>Организация</th><th>Год</th><th>Вес, кг</th><th>Статус</th><th></th></tr></thead>
+          <thead><tr><th>ФИО</th><th>Организация</th><th>Год</th><th>Фактический, кг</th><th>Заявленный, кг</th><th>Статус</th><th></th></tr></thead>
           <tbody>${list.map(p => `<tr>
             <td><b>${esc(p.name)}</b></td><td>${esc(p.organization)}</td><td>${p.birth_year??""}</td>
             <td><input data-w="${p.id}" value="${p.weight ?? ""}" inputmode="decimal" style="width:110px"></td>
+            <td><input data-dw="${p.id}" value="${p.declared_weight ?? ""}" inputmode="decimal" style="width:110px"></td>
             <td><select data-st="${p.id}">
               ${["заявлен","взвешен","допущен","снят","не явился"].map(s => `<option ${s===p.status?"selected":""}>${s}</option>`).join("")}
             </select></td>
@@ -493,9 +495,16 @@ const views = {
     $("#view").onclick = async (e) => {
       const id = e.target.dataset.save || e.target.dataset.hist;
       if (e.target.dataset.save) {
+        const dw = $(`input[data-dw="${id}"]`).value;
         const w = $(`input[data-w="${id}"]`).value;
         const st = $(`select[data-st="${id}"]`).value;
-        try { await api(`/api/participants/${id}/weigh`, { method:"POST", body:{ weight:w, status:st } }); toast("Вес записан"); }
+        try {
+          await api(`/api/participants/${id}/weigh`, {
+            method: "POST",
+            body: { weight: w, declared_weight: dw, status: st },
+          });
+          toast("Вес записан");
+        }
         catch (err) { toast(err.message, "err"); }
       }
       if (e.target.dataset.hist) {
@@ -811,13 +820,16 @@ function personForm(p) {
     <div class="form-sec">
       <h4>На турнире</h4>
       <div class="grid two">
-        <label class="field">Вес, кг
-          <input id="f-w" value="${esc(v("weight"))}" inputmode="decimal" placeholder="65,8">
+        <label class="field">Фактический вес, кг
+          <input id="f-w" value="${esc(v("weight"))}" inputmode="decimal" placeholder="после взвешивания">
         </label>
-        <label class="field">Жребий
-          <input id="f-draw" value="${esc(v("draw_number"))}" inputmode="numeric" placeholder="вручную или после жеребьёвки">
+        <label class="field">Заявленный вес, кг
+          <input id="f-dw" value="${esc(v("declared_weight"))}" inputmode="decimal" placeholder="65,8">
         </label>
       </div>
+      <label class="field">Жребий
+        <input id="f-draw" value="${esc(v("draw_number"))}" inputmode="numeric" placeholder="вручную или после жеребьёвки">
+      </label>
       <label class="field">Статус
         <div class="pills" id="f-status">
           ${statuses.map(s => `<button type="button" data-v="${s}">${s}</button>`).join("")}
@@ -844,6 +856,7 @@ function personForm(p) {
       rank: $("#f-rank").value,
       birth_year: $("#f-year").value,
       coach: $("#f-coach").value,
+      declared_weight: $("#f-dw").value,
       weight: $("#f-w").value,
       draw_number: $("#f-draw").value,
       gender: $("#f-gender").dataset.value || "муж",

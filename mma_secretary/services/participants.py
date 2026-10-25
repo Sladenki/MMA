@@ -28,6 +28,7 @@ def participant_from_row(row) -> Participant:
         draw_number=data.get("draw_number"),
         gender=data.get("gender") or "муж",
         division_id=data.get("division_id"),
+        declared_weight=data.get("declared_weight"),
     )
 
 
@@ -67,6 +68,7 @@ class ParticipantsMixin:
         year = int(year) if year not in (None, "") else None
         coach = (data.get("coach") or "").strip()
         weight = parse_weight(data.get("weight"))
+        declared = parse_weight(data.get("declared_weight"))
         status = data.get("status") or ("взвешен" if weight is not None else "заявлен")
         draw = data.get("draw_number")
         draw = int(draw) if draw not in (None, "") else None
@@ -83,9 +85,9 @@ class ParticipantsMixin:
         warning = self._dup_warning(name, year)
         cur = self.conn.execute(
             """INSERT INTO participant
-               (tournament_id, seq, name, organization, rank, birth_year, coach, weight, status, draw_number, gender, division_id)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
-            (self.tid(), seq, name, org, rank, year, coach, weight, status, draw, gender, division_id),
+               (tournament_id, seq, name, organization, rank, birth_year, coach, weight, declared_weight, status, draw_number, gender, division_id)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (self.tid(), seq, name, org, rank, year, coach, weight, declared, status, draw, gender, division_id),
         )
         pid = cur.lastrowid
         if weight is not None:
@@ -111,6 +113,10 @@ class ParticipantsMixin:
         year = int(year) if year not in (None, "") else None
         coach = (data.get("coach", prev["coach"]) or "").strip()
         weight = parse_weight(data.get("weight")) if "weight" in data else prev["weight"]
+        if "declared_weight" in data:
+            declared = parse_weight(data.get("declared_weight"))
+        else:
+            declared = prev["declared_weight"] if "declared_weight" in prev.keys() else None
         status = data.get("status", prev["status"])
         draw = data.get("draw_number", prev["draw_number"])
         draw = int(draw) if draw not in (None, "") else None
@@ -120,8 +126,8 @@ class ParticipantsMixin:
         warning = self._dup_warning(name, year, exclude_id=pid)
         self.conn.execute(
             """UPDATE participant SET name=?, organization=?, rank=?, birth_year=?, coach=?,
-               weight=?, status=?, draw_number=?, gender=?, division_id=? WHERE id=?""",
-            (name, org, rank, year, coach, weight, status, draw, gender, division_id, pid),
+               weight=?, declared_weight=?, status=?, draw_number=?, gender=?, division_id=? WHERE id=?""",
+            (name, org, rank, year, coach, weight, declared, status, draw, gender, division_id, pid),
         )
         if "weight" in data and weight != prev["weight"] and weight is not None:
             self.conn.execute(
@@ -144,16 +150,30 @@ class ParticipantsMixin:
         self._audit("delete_participant", {"before": dict(prev)})
         self.conn.commit()
 
-    def weigh_in(self, pid: int, weight_raw, status: str | None = None) -> dict:
+    def weigh_in(
+        self,
+        pid: int,
+        weight_raw,
+        status: str | None = None,
+        *,
+        declared_weight=None,
+        update_declared: bool = False,
+    ) -> dict:
         weight = parse_weight(weight_raw)
         if weight is None:
-            raise ValueError("Нужен вес")
+            raise ValueError("Нужен фактический вес")
         prev = dict(self.conn.execute("SELECT * FROM participant WHERE id=?", (pid,)).fetchone())
         st = status or ("допущен" if prev["status"] in {"заявлен", "взвешен", "допущен"} else prev["status"])
         limits = [w.limit_kg for w in self.list_weights()]
         if limits and weight > max(limits) + 1e-9:
             st = "снят"
-        self.conn.execute("UPDATE participant SET weight=?, status=? WHERE id=?", (weight, st, pid))
+        declared = prev.get("declared_weight")
+        if update_declared:
+            declared = parse_weight(declared_weight)
+        self.conn.execute(
+            "UPDATE participant SET weight=?, declared_weight=?, status=? WHERE id=?",
+            (weight, declared, st, pid),
+        )
         self.conn.execute(
             "INSERT INTO weight_history (participant_id, weight, recorded_at) VALUES (?,?,?)",
             (pid, weight, _now()),
