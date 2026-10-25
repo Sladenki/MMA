@@ -440,7 +440,6 @@ const views = {
           <button class="btn" id="p-add" type="button"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> Добавить</button>
           <label class="btn sec"><svg viewBox="0 0 24 24"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M5 20h14"/></svg> Загрузить Excel<input type="file" id="p-imp" accept=".xlsx,.xlsm,.csv" hidden></label>
           <a class="btn sec" href="/api/export/participants.xlsx"><svg viewBox="0 0 24 24"><path d="M12 4v11M8 11l4 4 4-4"/><path d="M5 20h14"/></svg> Скачать список</a>
-          <button class="btn sec" id="p-demo" type="button"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg> Учебный список</button>
         </div>
       </div>
       <div class="table-wrap">
@@ -491,7 +490,6 @@ const views = {
       const r = await fetch("/api/participants/import", { method:"POST", body: fd }).then(x=>x.json());
       toast(`Загружено: ${r.added}`); show("people");
     };
-    $("#p-demo").onclick = async () => { await api("/api/demo", { method:"POST", body:{} }); toast("Учебный список загружен"); show("people"); };
   },
 
   async weigh() {
