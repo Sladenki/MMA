@@ -1,7 +1,7 @@
 const $ = (s, r=document) => r.querySelector(s);
 const $$ = (s, r=document) => [...r.querySelectorAll(s)];
 
-const state = { view: "archives", boot: null, sort: "seq", catId: null };
+const state = { view: "archives", boot: null, sort: "seq", catId: null, dirty: false, formBaseline: "" };
 
 const titles = {
   archives: ["Турниры", "Сохраните текущие данные, начните пустой турнир или откройте другую копию."],
@@ -42,12 +42,57 @@ function statusClass(s) {
   return "";
 }
 
-function setSaveState(state) {
+function formSignature(root = $("#view")) {
+  if (!root) return "";
+  return [...root.querySelectorAll("input, select, textarea")]
+    .filter((el) => {
+      if (el.type === "file" || el.type === "hidden") return false;
+      if (el.classList.contains("dd-native") || el.closest(".dd-menu")) return false;
+      if (el.id === "q" || el.id === "sort" || el.id === "cat-sel" || el.id === "save-name") return false;
+      if (el.closest(".search-box")) return false;
+      return true;
+    })
+    .map((el) => `${el.id}|${el.name}|${el.dataset.w || ""}|${el.dataset.dw || ""}|${el.dataset.st || ""}|${el.dataset.pp || ""}|${el.dataset.draw || ""}|${el.dataset.ring || ""}|${el.dataset.org || ""}|${el.dataset.mid || ""}=${el.value}`)
+    .join("\n");
+}
+
+function setSaveState(mode) {
   const el = $("#save-dot");
   if (!el) return;
-  el.className = "save-ind " + state;
+  const effective = mode === "busy" ? "busy" : (state.dirty ? "dirty" : "saved");
+  el.className = "save-ind " + effective;
   const label = $(".save-label", el);
-  if (label) label.textContent = state === "busy" ? "сохранение…" : "сохранено";
+  if (label) {
+    label.textContent = effective === "busy"
+      ? "сохранение…"
+      : effective === "dirty"
+        ? "не сохранено"
+        : "сохранено";
+  }
+}
+
+function markClean() {
+  state.formBaseline = formSignature();
+  state.dirty = false;
+  setSaveState("saved");
+}
+
+function checkDirty() {
+  const dirty = formSignature() !== state.formBaseline;
+  if (dirty === state.dirty) return;
+  state.dirty = dirty;
+  setSaveState(dirty ? "dirty" : "saved");
+}
+
+function watchDirty(root = $("#view")) {
+  if (!root) return;
+  root.addEventListener("input", checkDirty);
+  root.addEventListener("change", checkDirty);
+}
+
+function confirmLeaveUnsaved() {
+  if (!state.dirty) return true;
+  return confirm("Есть несохранённые данные. Уйти и потерять их?");
 }
 
 async function api(path, opts={}) {
@@ -58,7 +103,7 @@ async function api(path, opts={}) {
     body: opts.body && typeof opts.body !== "string" && !(opts.body instanceof FormData)
       ? JSON.stringify(opts.body) : opts.body,
   });
-  setSaveState("saved");
+  setSaveState(state.dirty ? "dirty" : "saved");
   if (!res.ok) {
     let msg = res.statusText;
     try { const j = await res.json(); msg = j.detail || msg; } catch {}
@@ -249,17 +294,28 @@ $("#modal").addEventListener("click", e => { if (e.target.id === "modal") closeM
 
 $$("#nav button").forEach(b => b.onclick = () => show(b.dataset.view));
 $("#btn-undo").onclick = async () => {
-  try { const r = await api("/api/undo", { method: "POST", body: {} }); toast("Отменено"); show(state.view); }
+  if (!confirmLeaveUnsaved()) return;
+  try { const r = await api("/api/undo", { method: "POST", body: {} }); toast("Отменено"); state.dirty = false; show(state.view); }
   catch (e) { toast(e.message, "err"); }
 };
-$("#btn-backup").onclick = () => { location.href = "/api/export"; };
+$("#btn-backup").onclick = () => {
+  if (!confirmLeaveUnsaved()) return;
+  location.href = "/api/export";
+};
 $("#file-import").onchange = async (e) => {
   const f = e.target.files[0]; if (!f) return;
+  if (!confirmLeaveUnsaved()) { e.target.value = ""; return; }
   const fd = new FormData(); fd.append("file", f);
   await fetch("/api/import", { method: "POST", body: fd });
   toast("Турнир загружен");
+  state.dirty = false;
   await boot(); show(state.view);
 };
+window.addEventListener("beforeunload", (e) => {
+  if (!state.dirty) return;
+  e.preventDefault();
+  e.returnValue = "";
+});
 
 async function boot() {
   state.boot = await api("/api/bootstrap");
@@ -267,13 +323,23 @@ async function boot() {
 }
 
 async function show(view) {
+  if (view !== state.view && !confirmLeaveUnsaved()) return;
+  state.dirty = false;
   state.view = view;
   $$("#nav button").forEach(b => b.classList.toggle("active", b.dataset.view === view));
   $("#page-title").textContent = titles[view][0];
   $("#page-hint").textContent = titles[view][1];
   $("#page-hint").hidden = !titles[view][1];
   $("#view").innerHTML = "<p>Загрузка…</p>";
-  try { await views[view](); enhanceSelects($("#view")); } catch (e) { $("#view").innerHTML = `<div class="warn-box">${esc(e.message)}</div>`; }
+  try {
+    await views[view]();
+    enhanceSelects($("#view"));
+    markClean();
+    watchDirty($("#view"));
+  } catch (e) {
+    $("#view").innerHTML = `<div class="warn-box">${esc(e.message)}</div>`;
+    markClean();
+  }
 }
 
 function resultForm(b, onDone) {
@@ -408,12 +474,13 @@ const views = {
         rings: +$("#t-rings").value, bronze_bout: 0, two_bronzes: 1, award_walkover: 1,
       }});
       $("#brand-sub").textContent = state.boot.tournament.name;
+      markClean();
       toast("Сохранено");
     };
     renderCatalogs();
-    $("#age-add").onclick = async () => { await api("/api/age-groups", { method: "POST", body: { label: $("#age-label").value } }); await boot(); renderCatalogs(); };
-    $("#div-add").onclick = async () => { await api("/api/divisions", { method: "POST", body: { code: $("#div-code").value } }); await boot(); renderCatalogs(); };
-    $("#wt-add").onclick = async () => { await api("/api/weights", { method: "POST", body: { limit_kg: $("#wt-kg").value } }); await boot(); renderCatalogs(); };
+    $("#age-add").onclick = async () => { await api("/api/age-groups", { method: "POST", body: { label: $("#age-label").value } }); await boot(); renderCatalogs(); markClean(); };
+    $("#div-add").onclick = async () => { await api("/api/divisions", { method: "POST", body: { code: $("#div-code").value } }); await boot(); renderCatalogs(); markClean(); };
+    $("#wt-add").onclick = async () => { await api("/api/weights", { method: "POST", body: { limit_kg: $("#wt-kg").value } }); await boot(); renderCatalogs(); markClean(); };
     $("#pts-save").onclick = savePoints;
   },
 
@@ -473,6 +540,7 @@ const views = {
       if (!e.target.dataset.draw) return;
       try {
         await api("/api/participants/"+e.target.dataset.draw, { method:"PUT", body:{ draw_number: e.target.value } });
+        markClean();
         toast("Жребий записан");
       } catch (err) { toast(err.message, "err"); }
     };
@@ -526,6 +594,7 @@ const views = {
             method: "POST",
             body: { weight: w, declared_weight: dw, status: st },
           });
+          markClean();
           toast("Вес записан");
         }
         catch (err) { toast(err.message, "err"); }
@@ -644,8 +713,9 @@ const views = {
       const b = list.find(x => x.id == e.target.dataset.res);
       resultForm(b, () => show("bouts"));
     };
-    $$("input[data-ring]").forEach(inp => inp.onchange = () => {
-      api(`/api/bouts/${inp.dataset.ring}/schedule`, { method:"POST", body:{ ring: inp.value? +inp.value: null }});
+    $$("input[data-ring]").forEach(inp => inp.onchange = async () => {
+      await api(`/api/bouts/${inp.dataset.ring}/schedule`, { method:"POST", body:{ ring: inp.value? +inp.value: null }});
+      markClean();
     });
   },
 
@@ -678,8 +748,9 @@ const views = {
         </table>
         <p style="color:#5c6570;margin:12px 0 0">${Object.entries(man.titles).map(([k,v])=>`${esc(k)}: ${v}`).join(" · ")}</p>
       </div>`;
-    $$("input[data-org]").forEach(inp => inp.onchange = () => {
-      api("/api/teams/rep", { method:"POST", body:{ organization: inp.dataset.org, representative: inp.value }});
+    $$("input[data-org]").forEach(inp => inp.onchange = async () => {
+      await api("/api/teams/rep", { method:"POST", body:{ organization: inp.dataset.org, representative: inp.value }});
+      markClean();
     });
   },
 
@@ -738,9 +809,9 @@ function renderCatalogs() {
       </td>
     </tr>`).join("")}</tbody>
   </table>`;
-  $("#ages").onclick = async (e) => { if (e.target.dataset.delAge) { await api("/api/age-groups/"+e.target.dataset.delAge,{method:"DELETE"}); await boot(); renderCatalogs(); } };
-  $("#divs").onclick = async (e) => { if (e.target.dataset.delDiv) { await api("/api/divisions/"+e.target.dataset.delDiv,{method:"DELETE"}); await boot(); renderCatalogs(); } };
-  $("#wts").onclick = async (e) => { if (e.target.dataset.delWt) { await api("/api/weights/"+e.target.dataset.delWt,{method:"DELETE"}); await boot(); renderCatalogs(); } };
+  $("#ages").onclick = async (e) => { if (e.target.dataset.delAge) { await api("/api/age-groups/"+e.target.dataset.delAge,{method:"DELETE"}); await boot(); renderCatalogs(); markClean(); } };
+  $("#divs").onclick = async (e) => { if (e.target.dataset.delDiv) { await api("/api/divisions/"+e.target.dataset.delDiv,{method:"DELETE"}); await boot(); renderCatalogs(); markClean(); } };
+  $("#wts").onclick = async (e) => { if (e.target.dataset.delWt) { await api("/api/weights/"+e.target.dataset.delWt,{method:"DELETE"}); await boot(); renderCatalogs(); markClean(); } };
 }
 
 async function savePoints() {
@@ -752,6 +823,7 @@ async function savePoints() {
     points: +$(`input[data-pp="${i}"]`).value,
   });
   state.boot.point_rules = await api("/api/points", { method:"PUT", body: rules });
+  markClean();
   toast("Очки обновлены");
 }
 

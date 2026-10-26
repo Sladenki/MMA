@@ -150,6 +150,12 @@ h1 { margin: 0; font-size: 28px; color: var(--navy); }
   color: var(--amber);
 }
 .save-ind.busy .save-badge { fill: var(--amber); }
+.save-ind.dirty {
+  background: #fdebec;
+  border-color: #e8a0a8;
+  color: var(--red);
+}
+.save-ind.dirty .save-badge { fill: var(--red); }
 
 .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
 .toolbar input, .toolbar select, .toolbar .dd { width: auto; min-width: 160px; max-width: 280px; flex: 1 1 180px; }
