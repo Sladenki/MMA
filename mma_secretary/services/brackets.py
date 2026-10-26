@@ -136,7 +136,13 @@ class BracketsMixin:
                 (cid,),
             ).fetchall()
         ]
-        return {"category": cat, "entries": entries, "bouts": bouts, "placements": places}
+        return {
+            "category": cat,
+            "entries": entries,
+            "bouts": bouts,
+            "placements": places,
+            "pool": self._bracket_pool(cid),
+        }
 
     def redraw(self, cid: int, seed: int | None = None) -> dict:
         snapshot = self.category_detail(cid)
@@ -172,12 +178,38 @@ class BracketsMixin:
         self.conn.commit()
         return self.category_detail(cid)
 
-    def manual_order(self, cid: int, participant_ids: list[int]) -> dict:
-        snapshot = self.category_detail(cid)
-        if sorted(participant_ids) != sorted(
-            [r["participant_id"] for r in self.conn.execute("SELECT participant_id FROM category_entry WHERE category_id=?", (cid,))]
-        ):
-            raise ValueError("Список участников не совпадает с категорией")
+    def _bracket_pool(self, cid: int) -> list[dict]:
+        """Кого можно добавить в эту сетку: все, кто сейчас не в ней."""
+        rows = self.conn.execute(
+            """SELECT p.id, p.name, p.organization, p.rank, p.gender, p.status,
+                      p.weight, p.declared_weight, p.birth_year,
+                      c.id AS other_category_id,
+                      ag.label AS age_label, d.code AS division_code, w.label AS weight_label
+               FROM participant p
+               LEFT JOIN category_entry e ON e.participant_id=p.id
+               LEFT JOIN category c ON c.id=e.category_id AND c.tournament_id=p.tournament_id
+               LEFT JOIN age_group ag ON ag.id=c.age_group_id
+               LEFT JOIN division d ON d.id=c.division_id
+               LEFT JOIN weight_class w ON w.id=c.weight_class_id
+               WHERE p.tournament_id=? AND (e.category_id IS NULL OR e.category_id!=?)
+               ORDER BY p.name COLLATE NOCASE""",
+            (self.tid(), cid),
+        ).fetchall()
+        out = []
+        for r in rows:
+            item = dict(r)
+            if item.get("other_category_id"):
+                item["where"] = " · ".join(
+                    x for x in (item.get("age_label"), item.get("division_code"),
+                                f"до {item['weight_label']} кг" if item.get("weight_label") else "")
+                    if x
+                )
+            else:
+                item["where"] = "не в сетке"
+            out.append(item)
+        return out
+
+    def _replace_members(self, cid: int, participant_ids: list[int]) -> None:
         self.conn.execute("DELETE FROM placement WHERE category_id=?", (cid,))
         self.conn.execute("DELETE FROM bout WHERE category_id=?", (cid,))
         self.conn.execute("DELETE FROM category_entry WHERE category_id=?", (cid,))
@@ -189,6 +221,51 @@ class BracketsMixin:
         bronze, _ = self._bracket_flags()
         bracket = build_bracket(len(participant_ids), bronze_bout=bronze)
         self._write_bracket(cid, bracket)
+        self.conn.execute("UPDATE category SET drawn_at=? WHERE id=?", (_now(), cid))
+
+    def manual_order(self, cid: int, participant_ids: list[int]) -> dict:
+        """Состав сетки в заданном порядке. Можно добавить людей из других категорий и из списка без сетки."""
+        if len(participant_ids) > 64:
+            raise ValueError("В категории больше 64 участников: сетка не строится")
+        if len(set(participant_ids)) != len(participant_ids):
+            raise ValueError("Один и тот же человек указан дважды")
+        known = {
+            r["id"]
+            for r in self.conn.execute(
+                "SELECT id FROM participant WHERE tournament_id=?", (self.tid(),)
+            )
+        }
+        missing = [pid for pid in participant_ids if pid not in known]
+        if missing:
+            raise ValueError("В списке есть человек не из этого турнира")
+        snapshot = self._snapshot_brackets()
+        affected: set[int] = set()
+        for pid in participant_ids:
+            row = self.conn.execute(
+                """SELECT e.category_id FROM category_entry e
+                   JOIN category c ON c.id=e.category_id
+                   WHERE e.participant_id=? AND c.tournament_id=?""",
+                (pid, self.tid()),
+            ).fetchone()
+            if row and row["category_id"] != cid:
+                affected.add(row["category_id"])
+        if participant_ids:
+            marks = ",".join("?" * len(participant_ids))
+            self.conn.execute(
+                f"""DELETE FROM category_entry WHERE participant_id IN ({marks})
+                    AND category_id IN (SELECT id FROM category WHERE tournament_id=?)""",
+                (*participant_ids, self.tid()),
+            )
+        for other in affected:
+            left = [
+                r["participant_id"]
+                for r in self.conn.execute(
+                    "SELECT participant_id FROM category_entry WHERE category_id=? ORDER BY control_number",
+                    (other,),
+                )
+            ]
+            self._replace_members(other, left)
+        self._replace_members(cid, participant_ids)
         self.conn.execute(
             "INSERT INTO draw_log (category_id, method, seed, created_at, payload) VALUES (?,?,?,?,?)",
             (cid, "manual", None, _now(), json.dumps({"ids": participant_ids})),

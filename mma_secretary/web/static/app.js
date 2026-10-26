@@ -673,7 +673,7 @@ const views = {
           `<option value="${c.id}" ${c.id===state.catId?"selected":""}>до ${esc(c.weight_label)} кг · ${esc(c.age_label)} · ${esc(c.gender_label || "")} · ${esc(c.division_code)} · ${c.n} чел. · ${esc(c.bracket_title || kindRu(c.bracket_kind))}</option>`
         ).join("")}</select>
         <button class="btn sec" id="br-redraw" type="button">Новый жребий</button>
-        <button class="btn sec" id="br-manual" type="button">Расставить вручную</button>
+        <button class="btn sec" id="br-manual" type="button">Кто в сетке</button>
       </div>
       <div class="card">
         <h2>${esc(d.category.age_label)} · ${esc(d.category.gender_label || "")} · дивизион ${esc(d.category.division_code)} · до ${esc(d.category.weight_label)} кг · ${esc(title)}</h2>
@@ -827,36 +827,163 @@ async function savePoints() {
   toast("Очки обновлены");
 }
 
-function manualDrawForm(d) {
-  const n = d.entries.length;
-  openModal("Ручной жребий", `
-    <p class="hint-inline">Поставьте номера с 1 по ${n}. Так человек встанет в сетку. Результаты боёв этой категории сбросятся.</p>
-    ${d.entries.map(e => `
-      <div class="add-row" style="margin-bottom:8px">
-        <input data-mid="${e.participant_id}" value="${e.control_number}" inputmode="numeric" style="width:64px;text-align:center;font-size:22px;font-weight:700">
-        <span><b>${esc(e.name)}</b> · ${esc(e.organization || "")}${e.rank ? " · " + esc(e.rank) : ""}</span>
-      </div>
-    `).join("")}
-    <button class="btn" id="m-ok" type="button">Поставить в сетку</button>
-  `);
-  $("#m-ok").onclick = async () => {
-    const rows = d.entries.map(e => ({
+function foldName(s) {
+  return String(s || "").replace(/ё/gi, "е").toLocaleLowerCase("ru").replace(/\s+/g, " ").trim();
+}
+
+function nameMatches(person, query) {
+  const q = foldName(query);
+  if (!q) return false;
+  const hay = foldName(`${person.name || ""} ${person.organization || ""}`);
+  return q.split(" ").every(part => hay.includes(part));
+}
+
+async function manualDrawForm(d) {
+  let everyone = [];
+  try { everyone = await api("/api/participants?sort=alpha"); } catch { everyone = []; }
+  const whereById = new Map((d.pool || []).map(p => [p.id, p]));
+  const chosen = d.entries
+    .slice()
+    .sort((a, b) => a.control_number - b.control_number)
+    .map(e => ({
       id: e.participant_id,
-      num: +$(`input[data-mid="${e.participant_id}"]`).value,
+      name: e.name,
+      organization: e.organization || "",
+      where: "",
+      other_category_id: null,
     }));
-    const nums = rows.map(r => r.num);
-    if (nums.some(x => !Number.isInteger(x) || x < 1 || x > n) || new Set(nums).size !== n) {
-      toast("Нужны номера с 1 по " + n + ", каждый один раз", "err");
-      return;
+  const chosenIds = () => new Set(chosen.map(p => p.id));
+  const pool = [];
+  const seen = chosenIds();
+  for (const p of everyone) {
+    if (seen.has(p.id)) continue;
+    seen.add(p.id);
+    const extra = whereById.get(p.id);
+    pool.push({
+      id: p.id,
+      name: p.name,
+      organization: p.organization || "",
+      where: extra?.where || "не в сетке",
+      status: p.status || "",
+      other_category_id: extra?.other_category_id || null,
+    });
+  }
+  for (const p of (d.pool || [])) {
+    if (seen.has(p.id)) continue;
+    seen.add(p.id);
+    pool.push(p);
+  }
+  let query = "";
+  let focusSearch = true;
+  openModal("Кто в сетке", `<div id="roster"></div>`, "sheet");
+
+  const personLine = (p) => `<b>${esc(p.name)}</b>${p.organization ? " · " + esc(p.organization) : ""}`;
+
+  const paint = () => {
+    const q = query.trim();
+    const hits = q ? pool.filter(p => nameMatches(p, q)).slice(0, 8) : [];
+    const already = q ? chosen.filter(p => nameMatches(p, q)) : [];
+    let hitsHtml = "";
+    if (q && hits.length) {
+      hitsHtml = `<div class="roster-hits">${hits.map(p => `
+          <button type="button" class="roster-hit" data-add="${p.id}">
+            ${personLine(p)}
+            <small>${esc(p.where || "не в сетке")}</small>
+          </button>`).join("")}</div>`;
+    } else if (q && already.length) {
+      hitsHtml = `<div class="roster-hits"><p class="archive-empty" style="padding:10px 12px">Уже в списке ниже</p></div>`;
+    } else if (q) {
+      hitsHtml = `<div class="roster-hits"><p class="archive-empty" style="padding:10px 12px">В турнире такой фамилии нет</p></div>`;
     }
-    rows.sort((a, b) => a.num - b.num);
+    $("#roster").innerHTML = `
+      <label class="field roster-find">Добавить человека
+        <input id="roster-q" placeholder="Фамилия" value="${esc(query)}" autocomplete="off">
+        ${hitsHtml}
+      </label>
+      <div class="roster-list">
+        ${chosen.length ? chosen.map((p, i) => `
+          <div class="roster-row">
+            <span class="roster-num">${i + 1}</span>
+            <span class="roster-who">${personLine(p)}</span>
+            <span class="roster-move">
+              <button type="button" data-up="${i}" ${i ? "" : "disabled"}>выше</button>
+              <button type="button" data-down="${i}" ${i < chosen.length - 1 ? "" : "disabled"}>ниже</button>
+              <button type="button" data-out="${i}">убрать</button>
+            </span>
+          </div>`).join("") : `<p class="archive-empty" style="padding:12px">В сетке никого</p>`}
+      </div>
+      <div class="form-actions">
+        <button class="btn sec" id="m-cancel" type="button">Отмена</button>
+        <button class="btn" id="m-ok" type="button">Сохранить</button>
+      </div>`;
+    const qEl = $("#roster-q");
+    if (focusSearch) {
+      qEl.focus();
+      qEl.setSelectionRange(query.length, query.length);
+      focusSearch = false;
+    }
+    qEl.oninput = () => { query = qEl.value; focusSearch = true; paint(); };
+    $("#m-cancel").onclick = closeModal;
+    $("#m-ok").onclick = saveRoster;
+    $("#roster").onclick = (e) => {
+      const up = e.target.dataset.up;
+      const down = e.target.dataset.down;
+      const out = e.target.dataset.out;
+      const add = e.target.closest("[data-add]");
+      if (up != null && +up > 0) {
+        const i = +up;
+        [chosen[i - 1], chosen[i]] = [chosen[i], chosen[i - 1]];
+        paint();
+      }
+      if (down != null && +down < chosen.length - 1) {
+        const i = +down;
+        [chosen[i + 1], chosen[i]] = [chosen[i], chosen[i + 1]];
+        paint();
+      }
+      if (out != null) {
+        const [p] = chosen.splice(+out, 1);
+        pool.push({
+          id: p.id,
+          name: p.name,
+          organization: p.organization,
+          where: p.where || "не в сетке",
+          status: p.status || "",
+          other_category_id: p.other_category_id,
+        });
+        pool.sort((a, b) => a.name.localeCompare(b.name, "ru"));
+        paint();
+      }
+      if (add) {
+        const id = +add.dataset.add;
+        const idx = pool.findIndex(p => p.id === id);
+        if (idx < 0) return;
+        if (chosen.length >= 64) { toast("В сетке не больше 64 человек", "err"); return; }
+        chosen.push(pool.splice(idx, 1)[0]);
+        query = "";
+        focusSearch = true;
+        paint();
+      }
+    };
+  };
+
+  const saveRoster = async () => {
+    const moved = chosen.filter(p => p.other_category_id);
+    if (moved.length) {
+      const names = moved.map(p => p.name).join(", ");
+      if (!confirm(`Эти люди уйдут из своих сеток и встанут сюда: ${names}`)) return;
+    }
     try {
-      await api(`/api/categories/${state.catId}/order`, { method:"POST", body:{ participant_ids: rows.map(r => r.id) } });
+      await api(`/api/categories/${state.catId}/order`, {
+        method: "POST",
+        body: { participant_ids: chosen.map(p => p.id) },
+      });
       closeModal();
-      toast("Жребий расставлен");
+      toast("Сетка обновлена");
       show("brackets");
     } catch (err) { toast(err.message, "err"); }
   };
+
+  paint();
 }
 
 function bindChoice(root, initial) {

@@ -46,7 +46,9 @@ class HistoryMixin:
             raise ValueError("Нечего отменять")
         payload = json.loads(row["payload"])
         action = row["action"]
-        if action in {"set_result", "clear_bout", "redraw", "manual_order"} and "before" in payload:
+        if action == "manual_order" and "before" in payload and "categories" in payload["before"]:
+            self._restore_all_brackets(payload["before"])
+        elif action in {"set_result", "clear_bout", "redraw", "manual_order"} and "before" in payload:
             self._restore_category(payload["before"])
         elif action == "classify" and "before" in payload:
             self._restore_all_brackets(payload["before"])
